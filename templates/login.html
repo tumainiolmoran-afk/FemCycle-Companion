@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Login{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+    <h1>Welcome back</h1>
+    <p>Sign in to continue with your menstrual health dashboard.</p>
+    <form action="/login" method="post" class="stack-form">
+        <label>Email
+            <input type="email" name="email" required>
+        </label>
+        <label>Password
+            <input type="password" name="password" required>
+        </label>
+        <button class="primary-button" type="submit">Login</button>
+    </form>
+    <p class="soft-text auth-links">
+        <a href="/forgot-password">Forgot password? Reset by OTP sent to email</a>
+    </p>
+</section>
+{% endblock %}

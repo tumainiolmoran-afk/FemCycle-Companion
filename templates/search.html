@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Search{% endblock %}
+
+{% block content %}
+<section class="panel search-results-panel">
+    <p class="eyebrow">Search</p>
+    <h1>Search results</h1>
+    {% if query %}
+        <p class="lead">Showing matches for "<strong>{{ query }}</strong>".</p>
+    {% else %}
+        <p class="lead">Use the search box to find services, links, and doctor support contacts.</p>
+    {% endif %}
+
+    {% if results %}
+        <div class="search-results">
+            {% for item in results %}
+                <article class="search-result-card">
+                    <span class="result-type">{{ item["type"] }}</span>
+                    <h2>{{ item["title"] }}</h2>
+                    <p>{{ item["description"] }}</p>
+                    <a href="{{ item['url'] }}" {% if item['url'].startswith('http') %}target="_blank" rel="noreferrer"{% endif %}>Open resource</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% elif query %}
+        <p>No results matched your search yet. Try words like <em>cycle</em>, <em>doctor</em>, <em>WHO</em>, or <em>support</em>.</p>
+    {% endif %}
+</section>
+{% endblock %}

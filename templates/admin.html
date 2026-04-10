@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Admin{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero">
+    <div>
+        <p class="eyebrow">Admin Portal</p>
+        <h1>Admin control centre</h1>
+        <p class="lead">
+            Use this portal to manage user account details, review the people using the system, and send direct support messages to users who need help.
+        </p>
+    </div>
+    <div class="prediction-card">
+        <h2>Admin session</h2>
+        <p><strong>{{ session_timeout_minutes }} minutes</strong> of inactivity before sign-out.</p>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span class="stat-label">Users</span>
+        <strong>{{ admin_stats["users"] }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Cycle logs</span>
+        <strong>{{ admin_stats["cycle_logs"] }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Check-ins</span>
+        <strong>{{ admin_stats["checkins"] }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Chat messages</span>
+        <strong>{{ admin_stats["chat_messages"] }}</strong>
+    </article>
+</section>
+
+<section class="dashboard-grid admin-grid">
+    <article class="panel">
+        <h2>Users in the system</h2>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in admin_users %}
+                        <tr>
+                            <td>{{ item["id"] }}</td>
+                            <td>{{ item["full_name"] }}</td>
+                            <td>{{ item["email"] }}</td>
+                            <td>{{ "Superuser" if item["is_superuser"] else "User" }}</td>
+                            <td><a href="/admin?user_id={{ item['id'] }}">Manage</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="panel">
+        <h2>Manage selected user</h2>
+        {% if managed_user %}
+            <form action="/admin/users/update" method="post" class="stack-form">
+                <input type="hidden" name="user_id" value="{{ managed_user['id'] }}">
+                <label>Full name
+                    <input type="text" name="full_name" value="{{ managed_user['full_name'] }}" required>
+                </label>
+                <label>Email
+                    <input type="email" name="email" value="{{ managed_user['email'] }}" required>
+                </label>
+                <label>Age
+                    <input type="number" name="age" value="{{ managed_user['age'] }}" required>
+                </label>
+                <label>Average cycle length
+                    <input type="number" name="average_cycle_length" value="{{ managed_user['average_cycle_length'] }}" required>
+                </label>
+                <label>New password
+                    <input type="text" name="new_password" placeholder="Leave blank to keep current password">
+                </label>
+                <button class="primary-button" type="submit">Update user details</button>
+            </form>
+
+            <div class="admin-support-box">
+                <h3>Offer support to this user</h3>
+                <form action="/admin/support" method="post" class="stack-form">
+                    <input type="hidden" name="target_user_id" value="{{ managed_user['id'] }}">
+                    <label>Subject
+                        <input type="text" name="subject" placeholder="Example: We noticed you may need support" required>
+                    </label>
+                    <label>Support message
+                        <textarea name="message" rows="5" placeholder="Type the support message you want this user to see on their dashboard." required></textarea>
+                    </label>
+                    <button class="primary-button" type="submit">Send support message</button>
+                </form>
+            </div>
+        {% else %}
+            <p>Select a user from the table to edit login details or send support.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="panel">
+    <h2>Recent admin support messages</h2>
+    {% if support_messages %}
+        <ul class="timeline">
+            {% for item in support_messages %}
+                <li>
+                    <strong>{{ item["subject"] }}</strong>
+                    <span>To {{ item["target_name"] }} ({{ item["target_email"] }})</span>
+                    <p>{{ item["message"] }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No support messages have been sent yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

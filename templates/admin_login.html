@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Admin Login{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+    <h1>Admin login</h1>
+    <p>Sign in as a superuser to manage users, update login details, and offer support.</p>
+    <form action="/admin/login" method="post" class="stack-form">
+        <label>Email
+            <input type="email" name="email" required>
+        </label>
+        <label>Password
+            <input type="password" name="password" required>
+        </label>
+        <button class="primary-button" type="submit">Login as Admin</button>
+    </form>
+</section>
+{% endblock %}

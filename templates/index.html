@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Web-Based Menstrual Health Tracking</p>
+        <h1>Track cycles, get reminders, and chat through menstrual health insights.</h1>
+        <p class="lead">
+            This system is the web implementation of your proposal. It brings together user accounts,
+            cycle logging, predictive insights, reminders, and an AI-style support chatbot in one dashboard.
+        </p>
+        <div class="hero-actions">
+            <a class="primary-button" href="/register">Create Account</a>
+            <a class="ghost-link" href="/login">I already have an account</a>
+        </div>
+    </div>
+    <div class="feature-panel">
+        <h2>Core modules</h2>
+        <ul>
+            {% for service in services_menu %}
+                <li>{{ service["title"] }}: {{ service["description"] }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<section class="info-grid">
+    <article class="panel" id="about">
+        <p class="eyebrow">About Us</p>
+        <h2>Who we are</h2>
+        <p class="lead">{{ about["summary"] }}</p>
+    </article>
+    <article class="panel" id="vision">
+        <p class="eyebrow">Vision</p>
+        <h2>Our vision</h2>
+        <p class="lead">{{ about["vision"] }}</p>
+    </article>
+    <article class="panel" id="mission">
+        <p class="eyebrow">Mission</p>
+        <h2>Our mission</h2>
+        <p class="lead">{{ about["mission"] }}</p>
+    </article>
+</section>
+
+<section class="services-section">
+    <div class="section-heading">
+        <p class="eyebrow">Service Directory</p>
+        <h2>Support users can access</h2>
+    </div>
+    <div class="service-grid">
+        {% for service in services_menu %}
+            <article class="panel service-card" id="service-{{ service['slug'] }}">
+                <h3>{{ service["title"] }}</h3>
+                <p>{{ service["description"] }}</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

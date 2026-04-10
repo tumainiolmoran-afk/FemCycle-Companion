@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Chatbot{% endblock %}
+
+{% block content %}
+{% set support = support_profile if support_profile is defined else {
+    "headline": "The chatbot can still help with general menstrual health questions.",
+    "focus_areas": ["Menstrual support", "Health education"],
+    "recommendations": ["Log cycle data and wellbeing check-ins for personalized answers."]
+} %}
+
+<section class="chatgpt-shell">
+    <aside class="chatgpt-side panel">
+        <p class="eyebrow">Chatbot Centre</p>
+        <h1>FemCycle Chatbot</h1>
+        <p class="soft-text">
+            A fuller support assistant for symptoms, emotional wellbeing, cycle timing, menstrual education,
+            comfort care, privacy, and when to seek medical help.
+        </p>
+
+        <div class="education-list">
+            <div class="education-card">
+                <h3>Current support focus</h3>
+                <div class="focus-group">
+                    {% for item in support["focus_areas"] %}
+                        <span class="support-chip">{{ item }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="education-card">
+                <h3>Research mode</h3>
+                <p>{{ chatbot_research_notice }}</p>
+            </div>
+            <div class="education-card">
+                <h3>What the chatbot knows</h3>
+                <ul class="timeline support-list">
+                    <li>Symptoms and comfort care</li>
+                    <li>Cycle timing and fertility windows</li>
+                    <li>Stress, low mood, and emotional support</li>
+                    <li>Menstrual hygiene and products</li>
+                    <li>Warning signs and care escalation</li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <section class="chatgpt-main panel">
+        <header class="chatgpt-header">
+            <div>
+                <p class="eyebrow">Conversation</p>
+                <h2>Talk to the chatbot</h2>
+            </div>
+            <p class="soft-text">Suggested questions are clickable and will post automatically.</p>
+        </header>
+
+        <div class="starter-grid">
+            {% if user %}
+                {% for item in chatbot_starters %}
+                    <form action="/chat" method="post" class="starter-form">
+                        <input type="hidden" name="source" value="chatbot">
+                        <input type="hidden" name="message" value="{{ item }}">
+                        <input type="hidden" name="use_web_research" value="yes">
+                        <button type="submit" class="starter-card">{{ item }}</button>
+                    </form>
+                {% endfor %}
+            {% else %}
+                {% for item in chatbot_starters %}
+                    <div class="starter-card muted-starter">{{ item }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="chatgpt-stream">
+            {% if chat_history %}
+                {% for item in chat_history %}
+                    <article class="chat-row user-row">
+                        <div class="chat-avatar user-avatar">U</div>
+                        <div class="chat-card user-card">
+                            <strong>You</strong>
+                            <div class="chat-body">{{ item["message"] }}</div>
+                        </div>
+                    </article>
+                    <article class="chat-row bot-row">
+                        <div class="chat-avatar bot-avatar">F</div>
+                        <div class="chat-card bot-card">
+                            <strong>FemCycle Chatbot</strong>
+                            <div class="chat-body">{{ item["response"] }}</div>
+                        </div>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <div class="chat-empty">
+                    <h3>Start the conversation</h3>
+                    <p>Ask about cramps, stress, low energy, late periods, hygiene, or warning signs. The chatbot will answer in a broader, more supportive way than a simple reminder app.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if user %}
+            <form action="/chat" method="post" class="chat-composer">
+                <input type="hidden" name="source" value="chatbot">
+                <label class="composer-label">
+                    <textarea name="message" rows="4" placeholder="Ask about symptoms, moods, period timing, hygiene, warning signs, or anything related to menstrual health..." required></textarea>
+                </label>
+                <div class="composer-actions">
+                    <label class="research-toggle">
+                        <input type="checkbox" name="use_web_research" value="yes" checked>
+                        <span>Use Google-backed research if configured</span>
+                    </label>
+                    <button class="primary-button" type="submit">Send</button>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert-box">
+                <h3>Login required for personalized conversation</h3>
+                <p>You can browse the chatbot topics here, but log in to save conversations and get answers based on your cycle and wellbeing data.</p>
+                <a class="primary-button compact" href="/login">Login</a>
+            </div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

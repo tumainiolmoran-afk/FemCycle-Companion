@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Dashboard{% endblock %}
+
+{% block content %}
+{% set support = support_profile if support_profile is defined else {
+    "headline": "Your dashboard is loading with the support tools available for this account.",
+    "care_prompt": "You can still use cycle tracking, reminders, and chatbot support while the full support profile initializes.",
+    "focus_areas": ["Private menstrual support"],
+    "recommendations": ["Add a wellbeing check-in to unlock broader physical and emotional guidance."],
+    "medical_flags": [],
+    "wellness_snapshot": {
+        "checkin_count": 0,
+        "average_pain": none,
+        "average_stress": none
+    }
+} %}
+{% set prompt = wellbeing_prompt if wellbeing_prompt is defined else "How are you feeling today, physically and emotionally?" %}
+{% set promise = support_promise if support_promise is defined else {
+    "title": "Private and supportive by design",
+    "message": "This dashboard is built to go beyond simple date tracking by creating space for physical symptoms, emotional wellbeing, and personal support needs."
+} %}
+{% set checkins = wellness_checkins if wellness_checkins is defined else [] %}
+{% set library = education_library if education_library is defined else [] %}
+{% set admin_support = support_messages if support_messages is defined else [] %}
+
+<section class="dashboard-hero">
+    <div>
+        <p class="eyebrow">Support Dashboard</p>
+        <h1>{{ user["full_name"] }}'s whole-cycle support space</h1>
+        <p class="lead">
+            This dashboard now prioritizes the full menstrual experience: physical symptoms,
+            emotional wellbeing, private support needs, and personalized care guidance.
+        </p>
+    </div>
+    <div class="prediction-card">
+        <h2>Current support summary</h2>
+        <p>{{ support["headline"] }}</p>
+        <p class="soft-text">{{ support["care_prompt"] }}</p>
+        {% if prediction %}
+            <p><strong>Next period:</strong> {{ prediction["next_period_date"] }}</p>
+            <p><strong>Fertile window:</strong> {{ prediction["fertile_start"] }} to {{ prediction["fertile_end"] }}</p>
+        {% else %}
+            <p>Add your first cycle entry to unlock period prediction.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="promise-banner">
+    <div>
+        <span class="eyebrow">Why this matters</span>
+        <h2>{{ promise["title"] }}</h2>
+        <p>{{ promise["message"] }}</p>
+    </div>
+    <div class="promise-chip-stack">
+        <span class="support-chip">Physical support</span>
+        <span class="support-chip">Emotional support</span>
+        <span class="support-chip">Private guidance</span>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span class="stat-label">Cycle logs</span>
+        <strong>{{ report["total_logs"] }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Wellbeing check-ins</span>
+        <strong>{{ support["wellness_snapshot"]["checkin_count"] }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Average pain</span>
+        <strong>{{ support["wellness_snapshot"]["average_pain"] if support["wellness_snapshot"]["average_pain"] is not none else "No data" }}</strong>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Average stress</span>
+        <strong>{{ support["wellness_snapshot"]["average_stress"] if support["wellness_snapshot"]["average_stress"] is not none else "No data" }}</strong>
+    </article>
+</section>
+
+{% if admin_support %}
+<section class="panel">
+    <h2>Support from admin</h2>
+    <ul class="timeline">
+        {% for item in admin_support %}
+            <li>
+                <strong>{{ item["subject"] }}</strong>
+                <span>From {{ item["admin_name"] }}</span>
+                <p>{{ item["message"] }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<section class="dashboard-grid">
+    <article class="panel priority-panel">
+        <h2>Personalized care guidance</h2>
+        <p class="soft-text">This is the app’s main response to the problem statement: broader support beyond dates, reminders, and predictions.</p>
+        <div class="focus-group">
+            {% for item in support["focus_areas"] %}
+                <span class="support-chip">{{ item }}</span>
+            {% endfor %}
+        </div>
+        <ul class="timeline support-list">
+            {% for item in support["recommendations"] %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        {% if support["medical_flags"] %}
+            <div class="alert-box">
+                <h3>Care alerts</h3>
+                <ul class="timeline">
+                    {% for item in support["medical_flags"] %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <h2>Daily wellbeing check-in</h2>
+        <p class="soft-text">{{ prompt }}</p>
+        <div class="calendar-checkin-shell">
+            <div class="calendar-panel">
+                <div class="calendar-header">
+                    <button class="ghost-button compact calendar-nav" type="button" data-calendar-nav="prev">Previous</button>
+                    <div>
+                        <p class="eyebrow">Selected date</p>
+                        <strong id="selected-checkin-date">Choose a date</strong>
+                    </div>
+                    <button class="ghost-button compact calendar-nav" type="button" data-calendar-nav="next">Next</button>
+                </div>
+                <div class="calendar-month" id="calendar-month-label">Month</div>
+                <div class="wellbeing-calendar" id="wellbeing-calendar"></div>
+                <p class="soft-text">Click any date to open that day’s wellbeing form. Dates with saved check-ins are highlighted.</p>
+            </div>
+
+        <form action="/checkins" method="post" class="stack-form">
+            <input type="hidden" name="checkin_date" id="checkin_date_input" required>
+            <label>Pain level (0-10)
+                <input type="range" name="pain_level" min="0" max="10" value="3" data-range-output="pain-output" required>
+                <span class="range-output" id="pain-output">3 / 10</span>
+            </label>
+            <label>Energy level (1-10)
+                <input type="range" name="energy_level" min="1" max="10" value="6" data-range-output="energy-output" required>
+                <span class="range-output" id="energy-output">6 / 10</span>
+            </label>
+            <label>Stress level (0-10)
+                <input type="range" name="stress_level" min="0" max="10" value="4" data-range-output="stress-output" required>
+                <span class="range-output" id="stress-output">4 / 10</span>
+            </label>
+            <label>Sleep hours
+                <input type="number" name="sleep_hours" min="0" max="24" step="0.5" value="7" required>
+            </label>
+            <label>Emotional state for this date
+                <input type="text" name="feelings" placeholder="Example: emotionally drained, anxious, calm, hopeful" required>
+            </label>
+            <label>What are you experiencing physically?
+                <textarea name="notes" rows="4" placeholder="Describe cramps, headaches, bloating, discharge, low energy, heavy flow, appetite changes, body pain, or anything else you are experiencing."></textarea>
+            </label>
+            <label>What support would help most on this date?
+                <textarea name="care_preference" rows="3" placeholder="Type what would help most: rest, heat therapy, hydration, food, space, talking to someone, medical advice, or your own words." required></textarea>
+            </label>
+            <div>
+                <span class="form-label">Do you need extra support today?</span>
+                <div class="support-choice-group">
+                    <label class="support-choice">
+                        <input type="radio" name="support_needed" value="yes">
+                        <span>Yes, I need more support</span>
+                    </label>
+                    <label class="support-choice">
+                        <input type="radio" name="support_needed" value="no" checked>
+                        <span>No, I am managing for now</span>
+                    </label>
+                </div>
+            </div>
+            <button class="primary-button" type="submit">Save check-in</button>
+        </form>
+        </div>
+    </article>
+
+    <article class="panel">
+        <h2>Log cycle data</h2>
+        <form action="/cycles" method="post" class="stack-form">
+            <label>Start date
+                <input type="date" name="start_date" required>
+            </label>
+            <label>End date
+                <input type="date" name="end_date" required>
+            </label>
+            <label>Flow level
+                <select name="flow_level" required>
+                    <option value="Light">Light</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Heavy">Heavy</option>
+                </select>
+            </label>
+            <label>Mood
+                <select name="mood" required>
+                    <option value="Calm">Calm</option>
+                    <option value="Happy">Happy</option>
+                    <option value="Tired">Tired</option>
+                    <option value="Low">Low</option>
+                    <option value="Irritable">Irritable</option>
+                </select>
+            </label>
+            <label>Symptoms
+                <input type="text" name="symptoms" placeholder="cramps, headache, fatigue, bloating">
+            </label>
+            <label>Notes
+                <textarea name="notes" rows="4" placeholder="Anything important about this cycle"></textarea>
+            </label>
+            <button class="primary-button" type="submit">Save cycle log</button>
+        </form>
+    </article>
+
+    <article class="panel">
+        <h2>Chatbot support</h2>
+        <p class="soft-text">The chatbot now works alongside the support profile, not separately from it.</p>
+        <form action="/chat" method="post" class="stack-form">
+            <label>Ask anything
+                <textarea name="message" rows="4" placeholder="I feel overwhelmed and crampy today. What can help?" required></textarea>
+            </label>
+            <button class="primary-button" type="submit">Send message</button>
+        </form>
+        <div class="chat-history">
+            {% if chat_history %}
+                {% for item in chat_history %}
+                    <div class="chat-item user-bubble">
+                        <strong>You</strong>
+                        <div class="chat-body">{{ item["message"] }}</div>
+                    </div>
+                    <div class="chat-item bot-bubble">
+                        <strong>Support bot</strong>
+                        <div class="chat-body">{{ item["response"] }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No chatbot messages yet.</p>
+            {% endif %}
+        </div>
+    </article>
+
+    <article class="panel" id="education-centre">
+        <h2>Menstrual health education</h2>
+        <p class="soft-text">This section addresses the need for accurate information in a private and supportive format.</p>
+        <div class="education-list">
+            {% for item in library %}
+                <div class="education-card">
+                    <h3>{{ item["title"] }}</h3>
+                    <p>{{ item["summary"] }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel">
+        <h2>Reminders</h2>
+        {% if notifications %}
+            <ul class="timeline">
+                {% for item in notifications %}
+                    <li>
+                        <strong>{{ item["title"] }}</strong>
+                        <span>{{ item["scheduled_for"] }}</span>
+                        <p>{{ item["body"] }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Notifications will appear after predictions are generated.</p>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <h2>Recent wellbeing check-ins</h2>
+        {% if checkins %}
+            <ul class="timeline">
+                {% for item in checkins %}
+                    <li>
+                        <strong>{{ item["checkin_date"] }} | {{ item["feelings"] }}</strong>
+                        <span>Pain {{ item["pain_level"] }}/10 | Stress {{ item["stress_level"] }}/10 | Energy {{ item["energy_level"] }}/10</span>
+                        <p>Support preference: {{ item["care_preference"] }}</p>
+                        {% if item["support_needed"] %}
+                            <p><strong>Extra support requested</strong></p>
+                        {% endif %}
+                        {% if item["notes"] %}
+                            <p>{{ item["notes"] }}</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No wellbeing check-ins yet. Add one so the app can understand how you are doing beyond cycle dates.</p>
+        {% endif %}
+    </article>
+
+    <article class="panel">
+        <h2>Recent cycle logs</h2>
+        {% if cycle_logs %}
+            <ul class="timeline">
+                {% for item in cycle_logs %}
+                    <li>
+                        <strong>{{ item["start_date"] }} to {{ item["end_date"] }}</strong>
+                        <span>{{ item["flow_level"] }} flow | {{ item["mood"] }} mood</span>
+                        <p>Symptoms: {{ item["symptoms"] | join(", ") if item["symptoms"] else "None recorded" }}</p>
+                        {% if item["notes"] %}
+                            <p>{{ item["notes"] }}</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No cycle logs yet. Add your first entry to begin tracking.</p>
+        {% endif %}
+    </article>
+</section>
+
+<script>
+    (() => {
+        const calendarRoot = document.getElementById("wellbeing-calendar");
+        if (!calendarRoot) return;
+
+        const selectedDateLabel = document.getElementById("selected-checkin-date");
+        const hiddenDateInput = document.getElementById("checkin_date_input");
+        const monthLabel = document.getElementById("calendar-month-label");
+        const navButtons = document.querySelectorAll("[data-calendar-nav]");
+        const loggedDates = new Set([
+            {% for item in checkins %}
+                "{{ item['checkin_date'] }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]);
+
+        let current = new Date();
+        let selected = new Date();
+
+        function toIsoDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        }
+
+        function sameDate(a, b) {
+            return a.getFullYear() === b.getFullYear()
+                && a.getMonth() === b.getMonth()
+                && a.getDate() === b.getDate();
+        }
+
+        function setSelected(date) {
+            selected = new Date(date);
+            hiddenDateInput.value = toIsoDate(selected);
+            selectedDateLabel.textContent = selected.toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            calendarRoot.innerHTML = "";
+            const monthStart = new Date(current.getFullYear(), current.getMonth(), 1);
+            const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+            const firstWeekday = monthStart.getDay();
+            monthLabel.textContent = current.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+            ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((label) => {
+                const headerCell = document.createElement("div");
+                headerCell.className = "calendar-weekday";
+                headerCell.textContent = label;
+                calendarRoot.appendChild(headerCell);
+            });
+
+            for (let i = 0; i < firstWeekday; i += 1) {
+                const emptyCell = document.createElement("div");
+                emptyCell.className = "calendar-empty";
+                calendarRoot.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= monthEnd.getDate(); day += 1) {
+                const cellDate = new Date(current.getFullYear(), current.getMonth(), day);
+                const cell = document.createElement("button");
+                cell.type = "button";
+                cell.className = "calendar-day";
+                cell.textContent = day;
+                cell.dataset.date = toIsoDate(cellDate);
+
+                if (sameDate(cellDate, new Date())) {
+                    cell.classList.add("today");
+                }
+                if (sameDate(cellDate, selected)) {
+                    cell.classList.add("selected");
+                }
+                if (loggedDates.has(cell.dataset.date)) {
+                    cell.classList.add("has-entry");
+                }
+
+                cell.addEventListener("click", () => setSelected(cellDate));
+                calendarRoot.appendChild(cell);
+            }
+        }
+
+        navButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const direction = button.dataset.calendarNav;
+                current = new Date(current.getFullYear(), current.getMonth() + (direction === "next" ? 1 : -1), 1);
+                renderCalendar();
+            });
+        });
+
+        document.querySelectorAll("[data-range-output]").forEach((input) => {
+            const output = document.getElementById(input.dataset.rangeOutput);
+            const update = () => {
+                const suffix = input.name === "energy_level" ? " / 10" : " / 10";
+                output.textContent = `${input.value}${suffix}`;
+            };
+            input.addEventListener("input", update);
+            update();
+        });
+
+        setSelected(new Date());
+    })();
+</script>
+{% endblock %}

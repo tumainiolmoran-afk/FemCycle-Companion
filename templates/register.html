@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}FemCycle Companion | Register{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+    <h1>Create account</h1>
+    <p>Set up your profile and start building cycle history for better predictions.</p>
+    <form action="/register" method="post" class="stack-form">
+        <label>Full name
+            <input type="text" name="full_name" required>
+        </label>
+        <label>Email
+            <input type="email" name="email" required>
+        </label>
+        <label>Age
+            <input type="number" name="age" min="10" max="60" required>
+        </label>
+        <label>Average cycle length
+            <input type="number" name="average_cycle_length" min="21" max="35" value="28" required>
+        </label>
+        <label>Password
+            <input type="password" name="password" minlength="6" required>
+        </label>
+        <button class="primary-button" type="submit">Register</button>
+    </form>
+</section>
+{% endblock %}
